@@ -1,0 +1,25 @@
+{
+  "manifest_version": 2,
+
+  "name": "World of Warships Forum Extension",
+  "description": "temp",
+  "version": "0.0.1",
+  "author": "Jim Qi",
+
+  "browser_action": {
+    "default_icon": "icon.png",
+    "default_title": "WoWs forum Extension"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["http://forum.worldofwarships.com/index.php?/topic/*"],
+      "js": ["myscript.js"]
+    }
+  ],
+
+  "permissions": [
+    "activeTab",
+    "https://ajax.googleapis.com/"
+  ]
+}
