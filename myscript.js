@@ -41,7 +41,7 @@ function getPosts() {
  function getPosterName(post) {
  	var name;
  	var xPathResult = document.evaluate(
- 		"./div/h3/span/a/span",
+ 		"./div/h3/span",
  		post,
  		null,
  		XPathResult.FIRST_ORDERED_NODE_TYPE,
@@ -63,7 +63,7 @@ function getPosts() {
  function getPosterID(post) {
  	var id;
  	var xPathResult = document.evaluate(
- 		"./div/h3/span/a",
+ 		"./div/div/div/ul/li/a",
  		post,
  		null,
  		XPathResult.FIRST_ORDERED_NODE_TYPE,
@@ -121,6 +121,13 @@ function modifyPost(post, userid) {
 	addListElement(post, "Battles:" + battles);
 }
 
+/*
+ * adds a string to the list underneath the profile picture. used to display data on the user in the browser
+ *
+ * @param {DOM node} post - dom node containing one post in the thread
+ * @param {string} string - specific string to be added. set in modifyPost
+ *
+ */
 function addListElement(post, string) {
 	//dom node containing details on the poster (member group, posts etc) that was will add info to
 	var xPathResult = document.evaluate(
@@ -137,11 +144,19 @@ function addListElement(post, string) {
 }
 
 window.onload = function() {
-	if (checkLoggedIn()) {
 		getPosts()
-	}
 };
 
+
+/*
+ * checks if the user is logged in by looking to see if the reply button is enabled in the forum thread
+ * alerts the user if they are not logged in
+ *
+ */
+
+ /*
+  * no longer needed. keep just incase we need it in the future
+  *
 function checkLoggedIn() {
 	var xPathResult = document.evaluate(
  		"//div[@class='topic_controls']/ul/li",
@@ -155,8 +170,11 @@ function checkLoggedIn() {
  	console.log(result);
 
  	if (result == "disabled") {
+ 		alert("this extension currently only works if you're logged in")
  		return false;
  	}
  	else
  		return true;
 }
+
+*/
