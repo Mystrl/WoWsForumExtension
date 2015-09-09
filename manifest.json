@@ -3,7 +3,7 @@
 
   "name": "World of Warships Forum Extension",
   "description": "temp",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "author": "Jim Qi",
 
   "browser_action": {

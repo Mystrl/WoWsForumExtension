@@ -31,8 +31,6 @@ function getPosts() {
 	for (var i = 0; i < posts.length; i++) {
 		modifyPost(posts[i][0], posts[i][2]);
 	}
-
-	getUserData(posts[0][2]);
 }
 
 /*
@@ -101,7 +99,6 @@ function getUserData(userID) {
 	console.log(xhr.status);
 	if(xhr.status == 200) {
 		json = JSON.parse(xhr.responseText);
-		//alert(json.data[userID].leveling_tier);
 	}
 	else {
 		//handle errors at some point
@@ -140,5 +137,26 @@ function addListElement(post, string) {
 }
 
 window.onload = function() {
-	getPosts();
+	if (checkLoggedIn()) {
+		getPosts()
+	}
 };
+
+function checkLoggedIn() {
+	var xPathResult = document.evaluate(
+ 		"//div[@class='topic_controls']/ul/li",
+ 		document,
+ 		null,
+ 		XPathResult.FIRST_ORDERED_NODE_TYPE,
+ 		null);
+ 	var xPathNode = xPathResult.singleNodeValue;
+
+ 	var result = xPathNode.getAttribute("class");
+ 	console.log(result);
+
+ 	if (result == "disabled") {
+ 		return false;
+ 	}
+ 	else
+ 		return true;
+}
