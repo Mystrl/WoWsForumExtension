@@ -90,13 +90,12 @@ function getPosts() {
  *
  * returns data for the specified userID as a json
  */
-function getUserData(userID) {
+function getUserData(userid) {
 	var xhr = new XMLHttpRequest();
-	xhr.open("GET", "https://api.worldofwarships.com/wows/account/info/?application_id=ed959007246c32a0db3ba867fe835468&account_id=" + userID, false);
+	xhr.open("GET", "https://api.worldofwarships.com/wows/account/info/?application_id=ed959007246c32a0db3ba867fe835468&extra=statistics.pvp_solo&account_id=" + userid, false);
 	xhr.send();
 
 	var json;
-	console.log(xhr.status);
 	if(xhr.status == 200) {
 		json = JSON.parse(xhr.responseText);
 	}
@@ -105,6 +104,7 @@ function getUserData(userID) {
 		alert("error");
 	}
 
+	console.log("test");
 	return json;
 }
 
@@ -115,10 +115,37 @@ function getUserData(userID) {
  * @param {string} userid - userid of the poster
  */
 function modifyPost(post, userid) {
-	var userInfo = getUserData(userid);
-	var battles = userInfo.data[userid].statistics.battles;
+	//implement some sort of cache so we don't need to make so many api calls
+	//maximum calls per second is limited to 2-4
 
-	addListElement(post, "Battles:" + battles);
+		//localstorage only supports string key value pairs so we need to convert it back into a json
+	var userInfoString = localStorage.getItem(userid);
+	if (userInfoString !== null) {
+		var userInfo = JSON.parse(userInfoString);
+		console.log("test2");
+
+	}
+	else {
+		var userInfo = getUserData(userid);
+		localStorage.setItem(userid, JSON.stringify(userInfo));
+	}
+	var battlesPVP = userInfo.data[userid].statistics.pvp.battles;
+	var winsPVP = userInfo.data[userid].statistics.pvp.wins;
+
+	var battlesPVPSOLO = userInfo.data[userid].statistics.pvp_solo.battles;
+	var winsPVPSOLO = userInfo.data[userid].statistics.pvp_solo.wins;
+
+	addListElement(post, "Battles:" + battlesPVP);
+
+	//pvp win rate including divisions
+	var winratePVP = winsPVP/battlesPVP;
+	winratePVP = winratePVP.toFixed(2);
+	addListElement(post, "Win Rate (pvp):" + winratePVP);
+
+	//pvp win rate solo only
+	var winratePVPSOLO = winsPVPSOLO/battlesPVPSOLO;
+	winratePVPSOLO = winratePVPSOLO.toFixed(2);
+	addListElement(post, "Win Rate (solo only):" + winratePVPSOLO);
 }
 
 /*
@@ -155,7 +182,7 @@ window.onload = function() {
  */
 
  /*
-  * no longer needed. keep just incase we need it in the future
+  * no longer needed. keep just incase we need it in the future`
   *
 function checkLoggedIn() {
 	var xPathResult = document.evaluate(
