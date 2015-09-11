@@ -22,37 +22,11 @@ function getPosts() {
 	
 	//iterate over all the posts and find the name and ids of the posters then store them in the array
 	for (var i = 0; i < posts.length; i++) {
-		var name = getPosterName(posts[i][0]);
-		posts[i].push(name);
 		var id = getPosterID(posts[i][0]);
 		posts[i].push(id);
-	}
-	
-	for (var i = 0; i < posts.length; i++) {
-		modifyPost(posts[i][0], posts[i][2]);
+		modifyPost(posts[i][0], posts[i][1]);
 	}
 }
-
-/*
- * searches through the post for the username
- *
- * @param {DOM node} post - dom node containing one post in the thread
- */
- function getPosterName(post) {
- 	var name;
- 	var xPathResult = document.evaluate(
- 		"./div/h3/span",
- 		post,
- 		null,
- 		XPathResult.FIRST_ORDERED_NODE_TYPE,
- 		null);
-
- 	var xPathNode = xPathResult.singleNodeValue;
-
- 	var name = xPathNode.innerHTML;
-
- 	return name;
- }
 
 /*
  * searches through the post for the href containing a link to the user profile then uses a
@@ -104,7 +78,6 @@ function getUserData(userid) {
 		alert("error");
 	}
 
-	console.log("test");
 	return json;
 }
 
@@ -113,22 +86,11 @@ function getUserData(userid) {
  * 
  * @param {DOM node} post - dom node containing one post in the thread
  * @param {string} userid - userid of the poster
+ *
  */
 function modifyPost(post, userid) {
-	//implement some sort of cache so we don't need to make so many api calls
-	//maximum calls per second is limited to 2-4
+	var userInfo = accessCache(userid);
 
-		//localstorage only supports string key value pairs so we need to convert it back into a json
-	var userInfoString = localStorage.getItem(userid);
-	if (userInfoString !== null) {
-		var userInfo = JSON.parse(userInfoString);
-		console.log("test2");
-
-	}
-	else {
-		var userInfo = getUserData(userid);
-		localStorage.setItem(userid, JSON.stringify(userInfo));
-	}
 	var battlesPVP = userInfo.data[userid].statistics.pvp.battles;
 	var winsPVP = userInfo.data[userid].statistics.pvp.wins;
 
@@ -146,6 +108,30 @@ function modifyPost(post, userid) {
 	var winratePVPSOLO = winsPVPSOLO/battlesPVPSOLO;
 	winratePVPSOLO = winratePVPSOLO.toFixed(2);
 	addListElement(post, "Win Rate (solo only):" + winratePVPSOLO);
+}
+
+/*
+ * caches user data to reduces the number of api calls and loadtime
+ *
+ * @param {string} userid - userid of the poster
+ *
+ * returns the part of the json object containing the user data (removes timestamp field)
+ */
+function accessCache(userid) {
+	var userInfoString = localStorage.getItem(userid);
+	if (userInfoString !== null) {
+		var userInfo = JSON.parse(userInfoString);
+
+		var timestamp = userInfo.timestamp;
+		userInfo = userInfo.value;
+	}
+	else {
+		var userInfo = getUserData(userid);
+		var storageObject = {value: userInfo, timestamp: new Date().getTime()}
+		localStorage.setItem(userid, JSON.stringify(storageObject));
+	}
+
+	return userInfo;
 }
 
 /*
@@ -170,10 +156,15 @@ function addListElement(post, string) {
 	ul.appendChild(li);
 }
 
+$('document').ready( function(event) {
+	getPosts();
+});
+
+/*
 window.onload = function() {
 		getPosts()
 };
-
+*.
 
 /*
  * checks if the user is logged in by looking to see if the reply button is enabled in the forum thread
