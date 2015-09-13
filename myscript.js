@@ -91,6 +91,10 @@ function getUserData(userid) {
 function modifyPost(post, userid) {
 	var userInfo = accessCache(userid);
 
+	if (userInfo.data[userid] === null) {
+		addListElement(post, "This user has not played any battles");
+		return;
+	}
 	var battlesPVP = userInfo.data[userid].statistics.pvp.battles;
 	var winsPVP = userInfo.data[userid].statistics.pvp.wins;
 
@@ -156,8 +160,12 @@ function addListElement(post, string) {
 	ul.appendChild(li);
 }
 
-$('document').ready( function(event) {
+function init() {
 	getPosts();
+}
+
+$('document').ready( function(event) {
+	init();
 });
 
 /*
