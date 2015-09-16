@@ -66,11 +66,11 @@ function getPosts() {
  */
 function getUserData(userid) {
 	var xhr = new XMLHttpRequest();
-	xhr.open("GET", "https://api.worldofwarships.com/wows/account/info/?application_id=ed959007246c32a0db3ba867fe835468&extra=statistics.pvp_solo&account_id=" + userid, false);
+	xhr.open("GET", "https://api.worldofwarships.com/wows/account/info/?application_id=ed959007246c32a0db3ba867fe835468&extra=statistics.pvp_solo&account_id=" + userid, true);
 	xhr.send();
 
 	var json;
-	if(xhr.status == 200) {
+	if(xhr.status === 200) {
 		json = JSON.parse(xhr.responseText);
 	}
 	else {
@@ -195,7 +195,7 @@ function checkLoggedIn() {
  	var result = xPathNode.getAttribute("class");
  	console.log(result);
 
- 	if (result == "disabled") {
+ 	if (result === "disabled") {
  		alert("this extension currently only works if you're logged in")
  		return false;
  	}
