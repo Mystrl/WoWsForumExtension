@@ -3,7 +3,7 @@
 
   "name": "World of Warships Forum Extension",
   "description": "temp",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "author": "Jim Qi",
 
   "options_page": "options.html",
@@ -25,6 +25,7 @@
 
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "https://*.wowsforumextension.herokuapp.com/"
   ]
 }

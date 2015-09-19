@@ -120,7 +120,7 @@ function getUserData(userid) {
  */
 function modifyPost(post, userid) {
 	//we stored the data as a string using stringify so remember to turn it back into a json with parse
-	var userInfo = JSON.parse(localStorage.getItem(userid));
+	var userInfo = getFromCache(userid);
 
 	if (userInfo === null) {
 		addListElement(post, "This user has not played any battles");
@@ -161,39 +161,31 @@ function cacheTest(userid) {
 }
 
 /*
- * NOT IN USE
  * Stores the newely retrieved information from getUserData into localstorage by iterating through the list of ids not in cache
  *
- * @param {int} userid - userid we are searching for in localstorage
+ * @param {int} userid - userid we are using as the key
  *
  */
 function storeInCache(json, userid) {
 	for (var i = 0; i < userid.length; i++) {
-		localStorage.setItem(userid[i], JSON.stringify(json.data[userid[i]]));
+		var storageObject = {value: json.data[userid[i]], timestamp: new Date().getTime()}
+		localStorage.setItem(userid[i], JSON.stringify(storageObject));
 	}
 }
 
 /*
- * caches user data to reduces the number of api calls and loadtime
+ * Retrieves the stored json associated with the user id
  *
- * @param {string} userid - userid of the poster
+ * @param {int} userid - userid we are searching for in localstorage
  *
- * returns the part of the json object containing the user data (removes timestamp field)
  */
-function accessCache(userid) {
-	var userInfoString = localStorage.getItem(userid);
-	if (userInfoString !== null) {
-		var userInfo = JSON.parse(userInfoString);
-
-		var timestamp = userInfo.timestamp;
-		userInfo = userInfo.value;
-	}
-	else {
-		var userInfo = getUserData(userid);
-		var storageObject = {value: userInfo, timestamp: new Date().getTime()}
-		localStorage.setItem(userid, JSON.stringify(storageObject));
-	}
-
+function getFromCache(userid) {
+	var userInfo = localStorage.getItem(userid);
+	//we stringified it when we stored it so we need to convert back to a json before we do anything with it
+	userInfo = JSON.parse(userInfo);
+	var timestamp = userInfo.timestamp;
+	userInfo = userInfo.value;
+	//TODO: do something with the timestamp
 	return userInfo;
 }
 
