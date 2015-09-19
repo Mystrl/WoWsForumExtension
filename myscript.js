@@ -4,6 +4,7 @@
  *
  */
 function getPosts() {
+	//get list of all posts in the thread
 	var xPathResult = document.evaluate(
 		//all posts are div elements in a container with id = ips_posts
 		"//div[@id='ips_Posts']/div",
@@ -24,7 +25,33 @@ function getPosts() {
 	for (var i = 0; i < posts.length; i++) {
 		var id = getPosterID(posts[i][0]);
 		posts[i].push(id);
-		modifyPost(posts[i][0], posts[i][1]);
+	}
+
+	//create query string of id's not in cache
+	var notInCache = [];
+	var inCache = [];
+	//iterate through id's and check if we have cached information
+	for (var j = 0; j < posts.length; j++) {
+		if (!cacheTest(posts[j][1])) {
+			notInCache.push(posts[j][1]);
+		}
+		else {
+			inCache.push(posts[j][1]);
+		}
+	}
+
+	//Before we send the query we need to transform the array into a comma delimited string
+	//TODO: remove duplicate IDs
+	var queryString = notInCache.join();
+
+	if (queryString.length > 0) {
+		var userDataJSON = getUserData(queryString);
+	}
+
+	storeInCache(userDataJSON, notInCache);
+
+	for (var k = 0; k < posts.length; k++) {
+		modifyPost(posts[k][0], posts[k][1]);
 	}
 }
 
@@ -66,10 +93,12 @@ function getPosts() {
  */
 function getUserData(userid) {
 	var xhr = new XMLHttpRequest();
-	xhr.open("GET", "https://api.worldofwarships.com/wows/account/info/?application_id=ed959007246c32a0db3ba867fe835468&extra=statistics.pvp_solo&account_id=" + userid, true);
+	xhr.open("GET", "https://wowsforumextension.herokuapp.com/?userid=" + userid, false);	
 	xhr.send();
 
 	var json;
+
+	/*
 	if(xhr.status === 200) {
 		json = JSON.parse(xhr.responseText);
 	}
@@ -77,7 +106,8 @@ function getUserData(userid) {
 		//handle errors at some point
 		alert("error");
 	}
-
+	*/
+	json = JSON.parse(xhr.responseText);
 	return json;
 }
 
@@ -89,17 +119,18 @@ function getUserData(userid) {
  *
  */
 function modifyPost(post, userid) {
-	var userInfo = accessCache(userid);
+	//we stored the data as a string using stringify so remember to turn it back into a json with parse
+	var userInfo = JSON.parse(localStorage.getItem(userid));
 
-	if (userInfo.data[userid] === null) {
+	if (userInfo === null) {
 		addListElement(post, "This user has not played any battles");
 		return;
 	}
-	var battlesPVP = userInfo.data[userid].statistics.pvp.battles;
-	var winsPVP = userInfo.data[userid].statistics.pvp.wins;
+	var battlesPVP = userInfo.statistics.pvp.battles;
+	var winsPVP = userInfo.statistics.pvp.wins;
 
-	var battlesPVPSOLO = userInfo.data[userid].statistics.pvp_solo.battles;
-	var winsPVPSOLO = userInfo.data[userid].statistics.pvp_solo.wins;
+	var battlesPVPSOLO = userInfo.statistics.pvp_solo.battles;
+	var winsPVPSOLO = userInfo.statistics.pvp_solo.wins;
 
 	addListElement(post, "Battles:" + battlesPVP);
 
@@ -112,6 +143,34 @@ function modifyPost(post, userid) {
 	var winratePVPSOLO = winsPVPSOLO/battlesPVPSOLO;
 	winratePVPSOLO = winratePVPSOLO.toFixed(2);
 	addListElement(post, "Win Rate (solo only):" + winratePVPSOLO);
+}
+
+/*
+ * Returns true if we have a non expired cached json for the userid. False otherwise.
+ *
+ * @param {int} userid - userid we are searching for in localstorage
+ *
+ */
+function cacheTest(userid) {
+	if (localStorage.getItem(userid) !== null) {
+		return true;
+	}
+	else
+		return false;
+
+}
+
+/*
+ * NOT IN USE
+ * Stores the newely retrieved information from getUserData into localstorage by iterating through the list of ids not in cache
+ *
+ * @param {int} userid - userid we are searching for in localstorage
+ *
+ */
+function storeInCache(json, userid) {
+	for (var i = 0; i < userid.length; i++) {
+		localStorage.setItem(userid[i], JSON.stringify(json.data[userid[i]]));
+	}
 }
 
 /*

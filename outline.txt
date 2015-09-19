@@ -1,0 +1,7 @@
+getPosts called and creates an array of post DOM elements
+	iterate over posts to get userId's
+	append id's to each other seperated by commas
+	call getUserData on ids not cached
+		returns JSON of all users data
+		we put them into cache
+	iterate over all posts calling modify post and get data out of cache
