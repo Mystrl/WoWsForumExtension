@@ -132,17 +132,17 @@ function modifyPost(post, userid) {
 	var battlesPVPSOLO = userInfo.statistics.pvp_solo.battles;
 	var winsPVPSOLO = userInfo.statistics.pvp_solo.wins;
 
-	addListElement(post, "Battles:" + battlesPVP);
-
 	//pvp win rate including divisions
 	var winratePVP = winsPVP/battlesPVP;
+	winratePVP = winratePVP*100;
 	winratePVP = winratePVP.toFixed(2);
-	addListElement(post, "Win Rate (pvp):" + winratePVP);
+	addListElement(post, "PVP Win Rate: " + winratePVP + "% (" + battlesPVP + ")");
 
 	//pvp win rate solo only
 	var winratePVPSOLO = winsPVPSOLO/battlesPVPSOLO;
+	winratePVPSOLO = winratePVPSOLO*100;
 	winratePVPSOLO = winratePVPSOLO.toFixed(2);
-	addListElement(post, "Win Rate (solo only):" + winratePVPSOLO);
+	addListElement(post, "Solo PVP Win Rate: " + winratePVPSOLO  + "% (" + battlesPVPSOLO + ")");
 }
 
 /*
