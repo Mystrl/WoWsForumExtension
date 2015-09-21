@@ -1,6 +1,5 @@
-/*
- * stores the dom elements represeting forum posts in an 2d array along with the posters name and id
- * [ [dom element, name, id], [...], [...]]
+/* stores the dom elements represeting forum posts in an 2d array along with the posters name and id
+ * [ [dom element, id, name], [...], [...]]
  *
  */
 function getPosts() {
@@ -24,7 +23,9 @@ function getPosts() {
 	//iterate over all the posts and find the name and ids of the posters then store them in the array
 	for (var i = 0; i < posts.length; i++) {
 		var id = getPosterID(posts[i][0]);
+		var name = getPosterName(posts[i][0]);
 		posts[i].push(id);
+		posts[i].push(name);
 	}
 
 	//create query string of id's not in cache
@@ -45,19 +46,45 @@ function getPosts() {
 	var queryString = notInCache.join();
 
 	if (queryString.length > 0) {
-		var userDataJSON = getUserData(queryString);
+		getUserData(queryString, function(userDataJSON) {
+			storeInCache(userDataJSON, notInCache);
+			for (var k = 0; k < posts.length; k++) {
+				modifyPost(posts[k][0], posts[k][1], posts[k][2]);
+			}
+		});
 	}
 
-	storeInCache(userDataJSON, notInCache);
-
-	for (var k = 0; k < posts.length; k++) {
-		modifyPost(posts[k][0], posts[k][1]);
+	else {
+		for (var k = 0; k < posts.length; k++) {
+			modifyPost(posts[k][0], posts[k][1], posts[k][2]);
+		}
 	}
+
+
 }
 
-/*
- * searches through the post for the href containing a link to the user profile then uses a
- * regualr expression to extract the user id
+/* Searches through the post for the username
+ *
+ * @param {DOM node} post - dom node containing one post in the thread
+ */
+ function getPosterName(post) {
+ 	var name;
+ 	var xPathResult = document.evaluate(
+ 		"./div/h3/span/a/span",
+ 		post,
+ 		null,
+ 		XPathResult.FIRST_ORDERED_NODE_TYPE,
+ 		null);
+
+ 	var xPathNode = xPathResult.singleNodeValue;
+
+ 	var name = xPathNode.innerHTML;
+
+ 	return name;
+ }
+
+/* Searches through the post for the href containing a link to the user profile then uses a
+ * reguler expression to extract the user id
  *
  * @param {DOM node} post - dom node containing one post in the thread
  */
@@ -83,15 +110,14 @@ function getPosts() {
 	return id[0];
 }
 
-/*
- * makes an api call to the wargaming api to get data for the specified userid
+/* makes an api call to the wargaming api to get data for the specified userid
  * returns the data as a json object
  * 
  * @param {string} userid - userid of the poster
  *
  * returns data for the specified userID as a json
  */
-function getUserData(userid) {
+function getUserData(userid, callback) {
 	var xhr = new XMLHttpRequest();
 	xhr.open("GET", "https://wowsforumextension.herokuapp.com/?userid=" + userid, false);	
 	xhr.send();
@@ -108,17 +134,15 @@ function getUserData(userid) {
 	}
 	*/
 	json = JSON.parse(xhr.responseText);
-	return json;
+	callback(json);
 }
 
-/*
- * modifies a single post in the forum thread
+/* modifies a single post in the forum thread
  * 
  * @param {DOM node} post - dom node containing one post in the thread
  * @param {string} userid - userid of the poster
- *
  */
-function modifyPost(post, userid) {
+function modifyPost(post, userid, playerName) {
 	//we stored the data as a string using stringify so remember to turn it back into a json with parse
 	var userInfo = getFromCache(userid);
 
@@ -143,13 +167,21 @@ function modifyPost(post, userid) {
 	winratePVPSOLO = winratePVPSOLO*100;
 	winratePVPSOLO = winratePVPSOLO.toFixed(2);
 	addListElement(post, "Solo PVP Win Rate: " + winratePVPSOLO  + "% (" + battlesPVPSOLO + ")");
+
+	//add links to profiles
+	var warshipsStatsLink = "http://warshipstats.com/na/player/" + playerName
+	var warshipsStatsLinkText = "WarshipsStats";
+	addLinkElement(post, warshipsStatsLinkText, warshipsStatsLink);
+
+	var profileLink = "http://worldofwarships.com/en/community/accounts/" +userid + "-" + playerName
+	var profileLinkText = "Profile";
+	addLinkElement(post, profileLinkText, profileLink);
+
 }
 
-/*
- * Returns true if we have a non expired cached json for the userid. False otherwise.
+/* Returns true if we have a non expired cached json for the userid. False otherwise.
  *
  * @param {int} userid - userid we are searching for in localstorage
- *
  */
 function cacheTest(userid) {
 	if (localStorage.getItem(userid) !== null) {
@@ -160,11 +192,9 @@ function cacheTest(userid) {
 
 }
 
-/*
- * Stores the newely retrieved information from getUserData into localstorage by iterating through the list of ids not in cache
+/* Stores the newely retrieved information from getUserData into localstorage by iterating through the list of ids not in cache
  *
  * @param {int} userid - userid we are using as the key
- *
  */
 function storeInCache(json, userid) {
 	for (var i = 0; i < userid.length; i++) {
@@ -173,11 +203,9 @@ function storeInCache(json, userid) {
 	}
 }
 
-/*
- * Retrieves the stored json associated with the user id
+/* Retrieves the stored json associated with the user id
  *
  * @param {int} userid - userid we are searching for in localstorage
- *
  */
 function getFromCache(userid) {
 	var userInfo = localStorage.getItem(userid);
@@ -189,12 +217,10 @@ function getFromCache(userid) {
 	return userInfo;
 }
 
-/*
- * adds a string to the list underneath the profile picture. used to display data on the user in the browser
+/* adds a string to the list underneath the profile picture. used to display data on the user in the browser
  *
  * @param {DOM node} post - dom node containing one post in the thread
  * @param {string} string - specific string to be added. set in modifyPost
- *
  */
 function addListElement(post, string) {
 	//dom node containing details on the poster (member group, posts etc) that was will add info to
@@ -209,6 +235,31 @@ function addListElement(post, string) {
 	var li = document.createElement("li");
 	li.appendChild(document.createTextNode(string));
 	ul.appendChild(li);
+}
+
+/* Adds a link to the user info panel
+ *
+ * @param {DOM node} post - dom node containing one post in the thread
+ * @param {string} linkText - display text of the link
+ * @param {link} - url of the link element
+ */
+function addLinkElement(post, linkText, link) {
+	var xPathResult = document.evaluate(
+ 		"./div//div[@class='user_details']",
+ 		post,
+ 		null,
+ 		XPathResult.FIRST_ORDERED_NODE_TYPE,
+ 		null);
+
+	var ul = xPathResult.singleNodeValue;
+
+	var a = document.createElement("a");
+	a.textContent = linkText;
+	a.setAttribute('href', link);
+	ul.appendChild(a);
+
+	var br = document.createElement("br");
+	ul.appendChild(br);
 }
 
 function init() {
