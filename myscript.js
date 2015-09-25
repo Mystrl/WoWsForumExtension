@@ -76,6 +76,16 @@ function getPosts() {
  		XPathResult.FIRST_ORDERED_NODE_TYPE,
  		null);
 
+ 	//different page layout if not logged in
+ 	if (xPathResult.singleNodeValue == null) {
+  		var xPathResult = document.evaluate(
+ 			"./div/h3/span",
+ 			post,
+ 			null,
+ 			XPathResult.FIRST_ORDERED_NODE_TYPE,
+ 			null);		
+ 		}
+
  	var xPathNode = xPathResult.singleNodeValue;
 
  	var name = xPathNode.innerHTML;
@@ -119,12 +129,12 @@ function getPosts() {
  */
 function getUserData(userid, callback) {
 	var xhr = new XMLHttpRequest();
-	xhr.open("GET", "https://wowsforumextension.herokuapp.com/?userid=" + userid, false);	
+	xhr.open("GET", "https://wowsforumextension.herokuapp.com/?userid=" + userid, false); 
 	xhr.send();
 
 	var json;
 
-	/*
+
 	if(xhr.status === 200) {
 		json = JSON.parse(xhr.responseText);
 	}
@@ -132,8 +142,7 @@ function getUserData(userid, callback) {
 		//handle errors at some point
 		alert("error");
 	}
-	*/
-	json = JSON.parse(xhr.responseText);
+	
 	callback(json);
 }
 
