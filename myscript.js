@@ -26,6 +26,7 @@ function getPosts() {
 		var name = getPosterName(posts[i][0]);
 		posts[i].push(id);
 		posts[i].push(name);
+		//initialDisplay(posts[i][0], id, name);
 	}
 
 	//create query string of id's not in cache
@@ -127,23 +128,35 @@ function getPosts() {
  *
  * returns data for the specified userID as a json
  */
-function getUserData(userid, callback) {
-	var xhr = new XMLHttpRequest();
-	xhr.open("GET", "https://wowsforumextension.herokuapp.com/?userid=" + userid, false); 
-	xhr.send();
+ function getUserData(userid, callback) {
+ 	var xhr = new XMLHttpRequest();
+ 	xhr.open("GET", "https://wowsforumextension.herokuapp.com/?userid=" + userid, true); 
+ 	xhr.send();
 
-	var json;
+ 	xhr.onreadystatechange = function() {
+ 		if(xhr.readyState == 4 && xhr.status == 200) {
+ 			var json;
 
+ 			json = JSON.parse(xhr.responseText);
+ 			callback(json);
+ 		}
+ 	}
+}
 
-	if(xhr.status === 200) {
-		json = JSON.parse(xhr.responseText);
-	}
-	else {
-		//handle errors at some point
-		alert("error");
-	}
-	
-	callback(json);
+function initialDisplay(post, userid, playerName) {
+
+	//addListElement(post, "PVP Win Rate: " + "loading" + "% (" + "loading" + ")");
+
+	//addListElement(post, "Solo PVP Win Rate: " + "loading"  + "% (" + "loading" + ")");
+
+	//add links to profiles
+	var warshipsStatsLink = "http://warshipstats.com/na/player/" + playerName
+	var warshipsStatsLinkText = "WarshipsStats";
+	addLinkElement(post, warshipsStatsLinkText, warshipsStatsLink);
+
+	var profileLink = "http://worldofwarships.com/en/community/accounts/" +userid + "-" + playerName
+	var profileLinkText = "Profile";
+	addLinkElement(post, profileLinkText, profileLink);
 }
 
 /* modifies a single post in the forum thread
@@ -159,12 +172,17 @@ function modifyPost(post, userid, playerName) {
 		addListElement(post, "This user has not played any battles");
 		return;
 	}
-	var battlesPVP = userInfo.statistics.pvp.battles;
-	var winsPVP = userInfo.statistics.pvp.wins;
 
-	var battlesPVPSOLO = userInfo.statistics.pvp_solo.battles;
-	var winsPVPSOLO = userInfo.statistics.pvp_solo.wins;
+	try {
+		var battlesPVP = userInfo.statistics.pvp.battles;
+		var winsPVP = userInfo.statistics.pvp.wins;
 
+		var battlesPVPSOLO = userInfo.statistics.pvp_solo.battles;
+		var winsPVPSOLO = userInfo.statistics.pvp_solo.wins;
+	}
+	catch (err) {
+		console.log("Error handling user info: ", err);
+	}
 	//pvp win rate including divisions
 	var winratePVP = winsPVP/battlesPVP;
 	winratePVP = winratePVP*100;
@@ -185,7 +203,6 @@ function modifyPost(post, userid, playerName) {
 	var profileLink = "http://worldofwarships.com/en/community/accounts/" +userid + "-" + playerName
 	var profileLinkText = "Profile";
 	addLinkElement(post, profileLinkText, profileLink);
-
 }
 
 /* Returns true if we have a non expired cached json for the userid. False otherwise.
@@ -231,19 +248,23 @@ function getFromCache(userid) {
  * @param {DOM node} post - dom node containing one post in the thread
  * @param {string} string - specific string to be added. set in modifyPost
  */
-function addListElement(post, string) {
+ function addListElement(post, string) {
 	//dom node containing details on the poster (member group, posts etc) that was will add info to
 	var xPathResult = document.evaluate(
- 		"./div//div[@class='user_details']",
- 		post,
- 		null,
- 		XPathResult.FIRST_ORDERED_NODE_TYPE,
- 		null);
-
-	var ul = xPathResult.singleNodeValue;
-	var li = document.createElement("li");
-	li.appendChild(document.createTextNode(string));
-	ul.appendChild(li);
+		"./div//div[@class='user_details']",
+		post,
+		null,
+		XPathResult.FIRST_ORDERED_NODE_TYPE,
+		null);
+	if (xPathResult.singleNodeValue != null) {
+		var ul = xPathResult.singleNodeValue;
+		var li = document.createElement("li");
+		li.appendChild(document.createTextNode(string));
+		ul.appendChild(li);
+	}
+	else {
+		console.log("Error finding DOM element (addListElement)");
+	}
 }
 
 /* Adds a link to the user info panel
