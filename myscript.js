@@ -166,7 +166,7 @@ function initialDisplay(post, userid, playerName) {
  */
 function modifyPost(post, userid, playerName) {
 	//we stored the data as a string using stringify so remember to turn it back into a json with parse
-	var userInfo = getFromCache(userid);
+	var userInfo = getFromCache(userid, 0);
 
 	if (userInfo === null) {
 		addListElement(post, "This user has not played any battles");
@@ -210,12 +210,29 @@ function modifyPost(post, userid, playerName) {
  * @param {int} userid - userid we are searching for in localstorage
  */
 function cacheTest(userid) {
-	if (localStorage.getItem(userid) !== null) {
+	if (localStorage.getItem(userid) !== null && notExpired(userid)) {
 		return true;
 	}
 	else
 		return false;
 
+}
+
+/* Returns true if the cache entry is less than 24 hours old
+ *
+ * @param {int} userid - key of the localStorage entry we want to check
+ */
+function notExpired(userid) {
+	var timestamp = getFromCache(userid, 1);
+	var currentTime = new Date().getTime();
+
+	//milliseconds per day = 86400000
+	if ((currentTime - timestamp) > 86400000) {
+		return false;
+	}
+	else {
+		return true;
+	}
 }
 
 /* Stores the newely retrieved information from getUserData into localstorage by iterating through the list of ids not in cache
@@ -232,15 +249,23 @@ function storeInCache(json, userid) {
 /* Retrieves the stored json associated with the user id
  *
  * @param {int} userid - userid we are searching for in localstorage
+ * @param {int} mode - select whether we want the json or timestamp 1 for timestamp otherwise json
+ *
+ * returns a json of the user info
  */
-function getFromCache(userid) {
+function getFromCache(userid, mode) {
 	var userInfo = localStorage.getItem(userid);
 	//we stringified it when we stored it so we need to convert back to a json before we do anything with it
 	userInfo = JSON.parse(userInfo);
 	var timestamp = userInfo.timestamp;
 	userInfo = userInfo.value;
 	//TODO: do something with the timestamp
-	return userInfo;
+	if (mode == 1) {
+		return timestamp;
+	}
+	else {
+		return userInfo;
+	}
 }
 
 /* adds a string to the list underneath the profile picture. used to display data on the user in the browser
