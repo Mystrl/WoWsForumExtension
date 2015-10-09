@@ -42,8 +42,6 @@ function getPosts() {
 		}
 	}
 
-	//Before we send the query we need to transform the array into a comma delimited string
-	//TODO: remove duplicate IDs
 	var queryString = notInCache.join();
 
 	if (queryString.length > 0) {
@@ -259,7 +257,6 @@ function getFromCache(userid, mode) {
 	userInfo = JSON.parse(userInfo);
 	var timestamp = userInfo.timestamp;
 	userInfo = userInfo.value;
-	//TODO: do something with the timestamp
 	if (mode == 1) {
 		return timestamp;
 	}
@@ -318,18 +315,18 @@ function addLinkElement(post, linkText, link) {
 }
 
 function init() {
-	getPosts();
+	chrome.storage.sync.get({
+		enabled: true
+	}, function(items) {
+		if (items.enabled) {
+			getPosts();
+		}
+	});
 }
 
 $('document').ready( function(event) {
 	init();
 });
-
-/*
-window.onload = function() {
-		getPosts()
-};
-*.
 
 /*
  * checks if the user is logged in by looking to see if the reply button is enabled in the forum thread

@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html>
-<head><title> Options</title></head>
+<head>
+	<title> Options</title>
+	<link href="popup.css" rel="stylesheet">
+</head>
 <body>
 
-Testing popup doesn't do anything right now.
-<footer class="button" id="optionsButton">
-  <div class="icon"></div>
-  <span class="optionsTextSmall"> Options </span> 
-</footer>
+<div class="onoffswitch">
+    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch" checked>
+    <label class="onoffswitch-label" for="myonoffswitch"></label>
+</div>
 
-<script src="options.js"></script>
+<div id="status"></div>
+
+<script src="popup.js"></script>
 </body>
 </html>
